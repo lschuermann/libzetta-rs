@@ -82,7 +82,13 @@ impl ZfsEngine for ZfsOpen3 {
 
         let out = z.output()?;
         if out.status.success() {
-            let stdout = String::from_utf8_lossy(&out.stdout);
+            let stdout =
+                if let Ok(stdout_str) = std::str::from_utf8(&out.stdout) {
+                    stdout_str.trim()
+                } else {
+                    return Err(Error::InvalidCharset(out.stdout.to_vec()));
+                };
+
             ZfsParser::parse(Rule::datasets_with_type, &stdout)
                 .map(|mut pairs| {
                     pairs

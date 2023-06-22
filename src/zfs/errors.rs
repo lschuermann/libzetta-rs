@@ -23,6 +23,7 @@ quick_error! {
         }
         Unknown {}
         UnknownSoFar(err: String) {}
+        InvalidCharset(zfs_output: Vec<u8>) {}
         DatasetNotFound(dataset: PathBuf) {}
         ValidationErrors(errors: Vec<ValidationError>) {
             from()
@@ -51,6 +52,7 @@ impl Error {
             Error::Io(_) => ErrorKind::Io,
             Error::DatasetNotFound(_) => ErrorKind::DatasetNotFound,
             Error::Unknown | Error::UnknownSoFar(_) => ErrorKind::Unknown,
+            Error::InvalidCharset(_) => ErrorKind::InvalidCharset,
             Error::ValidationErrors(_) => ErrorKind::ValidationErrors,
             Error::MultiOpError(_) => ErrorKind::MultiOpError,
             Error::ChanProgInval(_) => ErrorKind::ChanProgInval,
@@ -96,6 +98,7 @@ pub enum ErrorKind {
     Io,
     Unknown,
     DatasetNotFound,
+    InvalidCharset,
     ValidationErrors,
     Unimplemented,
     MultiOpError,
