@@ -90,11 +90,23 @@ impl ZfsEngine for ZfsOpen3 {
                 };
 
             ZfsParser::parse(Rule::datasets_with_type, &stdout)
-                .map(|mut pairs| {
-                    pairs
-                        .next()
-                        .unwrap()
-                        .into_inner()
+                .map_err(|_| Error::UnknownSoFar(String::from(stdout)))
+                .and_then(|mut pairs| {
+                    // Extract the first pair from the iterator:
+                    if let Some(pair) = pairs.next() {
+                        // Ensure that there is only one pair, and the first
+                        // pair spans the entire stdout string:
+                        if pairs.next().is_none() && pair.as_span().end() == stdout.len() {
+                            Ok(pair)
+                        } else {
+                            Err(Error::UnknownSoFar(stdout.to_string()))
+                        }
+                    } else {
+                        Err(Error::UnknownSoFar(stdout.to_string()))
+                    }
+                })
+                .map(|pair| {
+                    pair.into_inner()
                         .map(|pair| {
                             //
                             // - datasets_with_type
@@ -112,7 +124,6 @@ impl ZfsEngine for ZfsOpen3 {
                         })
                         .collect()
                 })
-                .map_err(|_| Error::UnknownSoFar(String::from(stdout)))
         } else {
             Err(Error::from_stderr(&out.stderr))
         }
